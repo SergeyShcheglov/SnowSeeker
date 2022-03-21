@@ -23,9 +23,13 @@ struct ContentView: View {
     @StateObject var favorites = Favorites()
     @State private var searchText = ""
     
+    @State private var byDefault = true
+    @State private var byCountry = false
+    @State private var byAlphabet = false
+    
     var body: some View {
         NavigationView {
-            List(filteredResorts) { resort in
+            List(sortedResorts) { resort in
                 NavigationLink {
                     ResortView(resort: resort)
                 } label: {
@@ -57,6 +61,36 @@ struct ContentView: View {
             }
             .navigationTitle("Resorts")
             .searchable(text: $searchText, prompt: "Search for a resort")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Button {
+                            byDefault = true
+                            byCountry = false
+                            byAlphabet = false
+                        } label: {
+                            Label("by Default", systemImage: (byDefault ? "checkmark" : ""))
+                        }
+                        Button {
+                            byAlphabet = true
+                            byCountry = false
+                            byDefault = false
+                        } label: {
+                            Label("by Alphabet", systemImage: (byAlphabet ? "checkmark" : ""))
+                        }
+                        Button {
+                            byCountry = true
+                            byAlphabet = false
+                            byDefault = false
+                        } label: {
+                            Label("by Country", systemImage: (byCountry ? "checkmark" : ""))
+                        }
+                    } label: {
+                        Label("sort", systemImage: "arrow.up.arrow.down")
+                            .labelStyle(.titleAndIcon)
+                    }
+                }
+            }
             
             WelcomeView()
         }
@@ -68,6 +102,16 @@ struct ContentView: View {
             return resorts
         } else {
             return resorts.filter { $0.name.localizedCaseInsensitiveContains(searchText)}
+        }
+    }
+    
+    var sortedResorts: [Resort] {
+        if byCountry {
+            return filteredResorts.sorted { $0.country.caseInsensitiveCompare($1.country) == .orderedAscending }
+        } else if byAlphabet {
+            return filteredResorts.sorted { $0.name.caseInsensitiveCompare($1.name) == .orderedAscending }
+        } else {
+            return filteredResorts
         }
     }
 }
